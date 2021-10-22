@@ -60,6 +60,15 @@ module "nomad_security_group" {
     prefix_list_ids  = null
     self             = true
     }, {
+    protocol         = "tcp"
+    from_port        = "8500"
+    to_port          = "8500"
+    cidr_blocks      = ["${lookup(jsondecode(data.http.current_ip.body), "ip")}/32"]
+    ipv6_cidr_blocks = null
+    security_groups  = null
+    prefix_list_ids  = null
+    self             = true
+    }, {
     protocol         = "-1"
     from_port        = "0"
     to_port          = "0"
@@ -121,7 +130,15 @@ resource "null_resource" "nomad_server" {
   }
 
   provisioner "file" {
-    content = templatefile("${path.module}/templates/server.hcl", {
+    content = templatefile("${path.module}/templates/consul-server.hcl", {
+      server_count = var.nomad_server_count
+      retry_join   = "provider=aws tag_key=${var.environment_name} tag_value=server region=${var.aws_region}"
+    })
+    destination = "/tmp/consul.hcl"
+  }
+
+  provisioner "file" {
+    content = templatefile("${path.module}/templates/nomad-server.hcl", {
       server_count = var.nomad_server_count
       retry_join   = "provider=aws tag_key=${var.environment_name} tag_value=server region=${var.aws_region}"
     })
@@ -144,6 +161,8 @@ resource "null_resource" "nomad_server" {
   provisioner "remote-exec" {
     scripts = [
       "${path.module}/scripts/docker.sh",
+      "${path.module}/scripts/consul.sh",
+      "${path.module}/scripts/consul-dns.sh",
       "${path.module}/scripts/nomad.sh"
     ]
   }
@@ -173,7 +192,14 @@ resource "null_resource" "nomad_client" {
   }
 
   provisioner "file" {
-    content = templatefile("${path.module}/templates/client.hcl", {
+    content = templatefile("${path.module}/templates/consul-client.hcl", {
+      retry_join = "provider=aws tag_key=${var.environment_name} tag_value=server region=${var.aws_region}"
+    })
+    destination = "/tmp/consul.hcl"
+  }
+
+  provisioner "file" {
+    content = templatefile("${path.module}/templates/nomad-client.hcl", {
       retry_join = "provider=aws tag_key=${var.environment_name} tag_value=server region=${var.aws_region}"
     })
     destination = "/tmp/nomad.hcl"
@@ -195,6 +221,8 @@ resource "null_resource" "nomad_client" {
   provisioner "remote-exec" {
     scripts = [
       "${path.module}/scripts/docker.sh",
+      "${path.module}/scripts/consul.sh",
+      "${path.module}/scripts/consul-dns.sh",
       "${path.module}/scripts/nomad.sh"
     ]
   }
