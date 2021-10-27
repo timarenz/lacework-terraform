@@ -201,6 +201,7 @@ resource "null_resource" "nomad_client" {
   provisioner "file" {
     content = templatefile("${path.module}/templates/nomad-client.hcl", {
       retry_join = "provider=aws tag_key=${var.environment_name} tag_value=server region=${var.aws_region}"
+      app_type = element(["ui","data","worker"], count.index)
     })
     destination = "/tmp/nomad.hcl"
   }
