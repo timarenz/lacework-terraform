@@ -5,4 +5,13 @@ client {
   server_join {
     retry_join = [ "${retry_join}" ]
   }
+  meta {
+    app = "${app_type}"
+  }
+}
+
+plugin "docker" {
+  config {
+    allow_privileged = true
+  }
 }

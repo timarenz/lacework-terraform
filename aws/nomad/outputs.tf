@@ -5,3 +5,7 @@ output "nomad_server_public_ips" {
 output "nomad_client_public_ips" {
   value = module.nomad_client[*].public_ip
 }
+
+output "nomad_client_private_ips" {
+  value = module.nomad_client[*].private_ip
+}

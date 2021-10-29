@@ -26,6 +26,7 @@ unzip -o consul_${CONSUL_VERSION}_linux_amd64.zip
 
 sudo chown root:root consul
 sudo mv consul /usr/bin/
+sudo setcap "cap_net_bind_service=+ep" /usr/bin/consul
 consul --version
 
 consul -autocomplete-install
