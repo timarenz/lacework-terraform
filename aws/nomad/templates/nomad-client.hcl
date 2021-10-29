@@ -9,3 +9,9 @@ client {
     app = "${app_type}"
   }
 }
+
+plugin "docker" {
+  config {
+    allow_privileged = true
+  }
+}

@@ -1,11 +1,24 @@
+variable "ui_host_ip" {
+  type = string
+}
+
+variable "data_host_ip" {
+  type = string
+}
+
+variable "worker_host_ip" {
+  type = string
+}
+
+
 job "voteapp" {
-  datacenters = ["dc1]
-  
+  datacenters = ["dc1"]
+
   type = "service"
 
   group "ui" {
     affinity {
-      attribute  = "${meta.app}"
+      attribute = meta.app
       value     = "ui"
     }
 
@@ -17,21 +30,22 @@ job "voteapp" {
       }
       port "result" {
         static = 5001
+        to = 80
       }
 
       dns {
-        servers = ["${attr.unique.network.ip-address}"]
+        servers  = ["${var.ui_host_ip}"]
         searches = ["service.dc1.consul"]
         # options = ["ndots:2"]
-        }
+      }
     }
 
     task "vote" {
       driver = "docker"
 
       config {
-        image = "detcaccounts/voteapp"
-        ports = ["vote"]
+        image      = "detcaccounts/voteapp"
+        ports      = ["vote"]
         privileged = true
       }
 
@@ -55,10 +69,9 @@ job "voteapp" {
       }
     }
   }
-
-group "data" {
+  group "data" {
     affinity {
-      attribute  = "${meta.app}"
+      attribute = meta.app
       value     = "data"
     }
 
@@ -73,7 +86,7 @@ group "data" {
       }
 
       dns {
-        servers = ["${attr.unique.network.ip-address}"]
+        servers  = ["${var.data_host_ip}"]
         searches = ["service.dc1.consul"]
         # options = ["ndots:2"]
       }
@@ -107,17 +120,17 @@ group "data" {
       }
 
       env {
-        PGDATA = "/var/lib/postgresql/data/pgdata"
-        POSTGRES_USER = "postgres"
-        POSTGRES_PASSWORD = "postgres"
+        PGDATA                    = "/var/lib/postgresql/data/pgdata"
+        POSTGRES_USER             = "postgres"
+        POSTGRES_PASSWORD         = "postgres"
         POSTGRES_HOST_AUTH_METHOD = "trust"
       }
     }
   }
 
-group "worker" {
+  group "worker" {
     affinity {
-      attribute  = "${meta.app}"
+      attribute = meta.app
       value     = "worker"
     }
 
@@ -125,7 +138,7 @@ group "worker" {
 
     network {
       dns {
-        servers = ["${attr.unique.network.ip-address}"]
+        servers  = ["${var.worker_host_ip}"]
         searches = ["service.dc1.consul"]
         # options = ["ndots:2"]
       }

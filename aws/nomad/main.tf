@@ -9,7 +9,8 @@ data "lacework_agent_access_token" "nomad" {
 }
 
 data "http" "current_ip" {
-  url = "https://api.ipify.org/?format=json"
+  # url = "https://api.ipify.org/?format=json"
+  url = "https://api4.my-ip.io/ip.json"
 }
 
 resource "tls_private_key" "ssh" {
@@ -45,6 +46,24 @@ module "nomad_security_group" {
     protocol         = "tcp"
     from_port        = "22"
     to_port          = "22"
+    cidr_blocks      = ["${lookup(jsondecode(data.http.current_ip.body), "ip")}/32"]
+    ipv6_cidr_blocks = null
+    security_groups  = null
+    prefix_list_ids  = null
+    self             = true
+    }, {
+    protocol         = "tcp"
+    from_port        = "80"
+    to_port          = "80"
+    cidr_blocks      = ["${lookup(jsondecode(data.http.current_ip.body), "ip")}/32"]
+    ipv6_cidr_blocks = null
+    security_groups  = null
+    prefix_list_ids  = null
+    self             = true
+    }, {
+    protocol         = "tcp"
+    from_port        = "5001"
+    to_port          = "5001"
     cidr_blocks      = ["${lookup(jsondecode(data.http.current_ip.body), "ip")}/32"]
     ipv6_cidr_blocks = null
     security_groups  = null
@@ -201,7 +220,7 @@ resource "null_resource" "nomad_client" {
   provisioner "file" {
     content = templatefile("${path.module}/templates/nomad-client.hcl", {
       retry_join = "provider=aws tag_key=${var.environment_name} tag_value=server region=${var.aws_region}"
-      app_type = element(["ui","data","worker"], count.index)
+      app_type   = element(["ui", "data", "worker"], count.index)
     })
     destination = "/tmp/nomad.hcl"
   }
@@ -228,4 +247,3 @@ resource "null_resource" "nomad_client" {
     ]
   }
 }
-
