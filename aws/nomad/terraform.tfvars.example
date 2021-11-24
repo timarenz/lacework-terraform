@@ -1,0 +1,9 @@
+# Rename or copy this file to terraform.tfvars
+# Prefix must be all lowercase letters, no symbols please.
+# Make sure it is at least 5 characters long.
+
+lacework_agent_token_name = "Token_xxx"
+aws_region = "xxx"
+owner_name = "xxx"
+profile = "lwintsexxx"
+lw_apiurl = "https://api.lacework.net"

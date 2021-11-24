@@ -26,3 +26,11 @@ variable "lacework_agent_token_name" {
   type    = string
   default = "nomad"
 }
+
+variable "profile" {
+  type = string
+}
+
+variable "lw_apiurl" {
+  type = string
+}
