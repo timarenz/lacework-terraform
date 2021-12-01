@@ -35,7 +35,11 @@ resource "aws_eks_cluster" "main" {
   vpc_config {
     subnet_ids             = module.environment.private_subnet_ids
     endpoint_public_access = true
-    public_access_cidrs    = ["${lookup(jsondecode(data.http.current_ip.body), "ip")}/32", "${module.environment.nat_gateway_public_ip}/32"]
+    # Restrict access to the public IP address of the machine used to deploy this and also the NAT gateway of the environment to allow the EKS nodes to join.
+    public_access_cidrs = [
+      "${lookup(jsondecode(data.http.current_ip.body), "ip")}/32",
+      "${module.environment.nat_gateway_public_ip}/32"
+    ]
   }
 
   tags = {
