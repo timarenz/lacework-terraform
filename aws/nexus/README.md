@@ -59,7 +59,7 @@ Now connect to the `http://<IPofNexusEC2Instance:8081` and set the default passw
 
 After that create a new registry with the name of `docker` that listens on HTTP port `5000`.
 
-![docker-repo-configuration](/assets/images/docker-repo-config.png)
+![docker-repo-configuration](https://github.com/timarenz/lacework-terraform/blob/main/aws/nexus/assets/images/docker-repo-config.png?raw=true)
 
 ## Proxy scanner setup
 
