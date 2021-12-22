@@ -1,0 +1,6 @@
+owner_name                        = "tim"
+ssh_public_key_name               = "MyKeyPairName"
+lacework_account_name             = "YourLacework.fra"
+lacework_integration_access_token = "_0123456789ABCDEF0123456789ABCDEF"
+route53_zone_name                 = "domain.example."
+nexus_fqdn                        = "nexus.domain.example"
