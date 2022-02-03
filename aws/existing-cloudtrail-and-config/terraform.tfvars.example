@@ -1,0 +1,3 @@
+owner_name         = "tim"
+environment_name   = "ThisCouldBeYourLaceworkAccoutName"
+existing_s3_bucket = "ExistingCloudTrailBucket"
