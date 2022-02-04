@@ -10,6 +10,10 @@ data "aws_s3_bucket" "existing" {
   bucket = var.existing_s3_bucket
 }
 
+data "aws_sns_topic" "existing" {
+  name = var.existing_sns_topic
+}
+
 resource "random_id" "id" {
   byte_length = 3
 }
@@ -54,6 +58,7 @@ module "lacework_aws_cloudtrail" {
   ]
 
   lacework_integration_name = "aws-cloudtrail-${data.aws_caller_identity.current.account_id}-${random_id.id.hex}"
+  prefix                    = lower("lacework-ct-${var.environment_name}-${random_id.id.hex}")
   use_existing_iam_role     = true
   iam_role_name             = module.lacework_aws_iam.name
   iam_role_arn              = module.lacework_aws_iam.arn
@@ -61,7 +66,10 @@ module "lacework_aws_cloudtrail" {
   use_existing_cloudtrail   = true
   bucket_name               = data.aws_s3_bucket.existing.bucket
   bucket_arn                = data.aws_s3_bucket.existing.arn
-  prefix                    = lower("lacework-ct-${var.environment_name}-${random_id.id.hex}")
+  use_existing_sns_topic    = true
+  sns_topic_name            = data.aws_sns_topic.existing.name
+  sns_topic_arn             = data.aws_sns_topic.existing.arn
+
   tags = {
     "environment" = var.environment_name
     "owner"       = var.owner_name

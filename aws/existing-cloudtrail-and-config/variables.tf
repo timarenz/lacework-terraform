@@ -18,3 +18,8 @@ variable "existing_s3_bucket" {
   description = "Name of the existing S3 bucket used by CloudTrail."
   type        = string
 }
+
+variable "existing_sns_topic" {
+  description = "Name of the existing SNS topic used by CloudTrail."
+  type        = string
+}
