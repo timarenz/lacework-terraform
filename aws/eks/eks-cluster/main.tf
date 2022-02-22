@@ -2,43 +2,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-provider "lacework" {}
-
-provider "kubernetes" {
-  host                   = data.aws_eks_cluster.main.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.main.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.main.token
-}
-
-provider "helm" {
-  kubernetes {
-    host                   = data.aws_eks_cluster.main.endpoint
-    cluster_ca_certificate = base64decode(data.aws_eks_cluster.main.certificate_authority[0].data)
-    token                  = data.aws_eks_cluster_auth.main.token
-  }
-}
-
-locals {
-  kubeconfig = templatefile("${path.module}/templates/kubeconfig.yaml.tpl", {
-    endpoint-url           = aws_eks_cluster.main.endpoint
-    base64-encoded-ca-cert = aws_eks_cluster.main.certificate_authority[0].data
-    cluster-name           = aws_eks_cluster.main.name
-  })
-}
-
 data "aws_caller_identity" "current" {}
-
-data "lacework_agent_access_token" "eks" {
-  name = var.lacework_agent_token_name
-}
-
-data "aws_eks_cluster" "main" {
-  name = aws_eks_cluster.main.name
-}
-
-data "aws_eks_cluster_auth" "main" {
-  name = aws_eks_cluster.main.name
-}
 
 data "http" "current_ip" {
   # url = "https://api.ipify.org/?format=json"
@@ -50,8 +14,7 @@ resource "random_id" "id" {
 }
 
 module "environment" {
-  # source           = "timarenz/environment/aws"
-  source           = "git::https://github.com/timarenz/terraform-aws-environment.git"
+  source           = "git::https://github.com/timarenz/terraform-aws-environment.git?ref=v0.1.3"
   name             = "${var.environment_name}-${random_id.id.hex}"
   environment_name = var.environment_name
   owner_name       = var.owner_name
