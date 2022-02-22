@@ -5,7 +5,7 @@ terraform {
       source  = "lacework/lacework"
       version = "~> 0.15"
     }
-    http = {
+    kubernetes = {
       source  = "hashicorp/kubernetes"
       version = "~> 2.8"
     }
