@@ -53,8 +53,7 @@ resource "helm_release" "lacework_agent" {
   name       = "lacework-agent"
   repository = "https://lacework.github.io/helm-charts"
   chart      = "lacework-agent"
-  # Install latest version
-  # version    = "5.0.0"
+  version    = "5.2.0"
 
   namespace = kubernetes_namespace.lacework.metadata[0].name
 
@@ -135,9 +134,7 @@ resource "helm_release" "lacework_proxy_scanner" {
   name       = "lacework-proxy-scanner"
   repository = "https://lacework.github.io/helm-charts"
   chart      = "proxy-scanner"
-  # chart = "/Users/tim/Dropbox/dev/workspaces/helm-charts/proxy-scanner"
-  # Install latest version
-  # version    = "0.2.2"
+  version    = "0.2.9"
 
   namespace = kubernetes_namespace.lacework.metadata[0].name
 
@@ -174,8 +171,7 @@ resource "helm_release" "lacework_admission_controller" {
   name       = "lacework-admission-controller"
   repository = "https://lacework.github.io/helm-charts"
   chart      = "admission-controller"
-  # Install latest version
-  # version    = "0.1.1"
+  version    = "0.1.6"
 
   namespace = kubernetes_namespace.lacework.metadata[0].name
 
