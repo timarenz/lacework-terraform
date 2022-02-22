@@ -1,51 +1,32 @@
-resource "aws_iam_role" "eks_cluster" {
-  name = "eks-cluster-role-${random_id.id.hex}"
+data "terraform_remote_state" "cluster" {
+  backend = "local"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "eks.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.eks_cluster.name
-}
-
-resource "aws_eks_cluster" "main" {
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_cluster_policy
-  ]
-
-  name                      = "eks-cluster-${random_id.id.hex}"
-  version                   = "1.21"
-  role_arn                  = aws_iam_role.eks_cluster.arn
-  enabled_cluster_log_types = ["audit", "authenticator"]
-
-  vpc_config {
-    subnet_ids             = module.environment.private_subnet_ids
-    endpoint_public_access = true
-    # Restrict access to the public IP address of the machine used to deploy this and also the NAT gateway of the environment to allow the EKS nodes to join.
-    public_access_cidrs = [
-      "${lookup(jsondecode(data.http.current_ip.body), "ip")}/32",
-      "${module.environment.nat_gateway_public_ip}/32"
-    ]
+  config = {
+    path = "../eks-cluster/terraform.tfstate"
   }
+}
 
-  tags = {
-    "environment" = var.environment_name
-    "owner"       = var.owner_name
-  }
+
+provider "aws" {
+  region = var.aws_region
+}
+
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.main.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.main.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.main.token
+}
+
+data "aws_eks_cluster" "main" {
+  name = data.terraform_remote_state.cluster.outputs.name
+}
+
+data "aws_eks_cluster_auth" "main" {
+  name = data.terraform_remote_state.cluster.outputs.name
+}
+
+resource "random_id" "id" {
+  byte_length = 3
 }
 
 resource "kubernetes_config_map" "aws_auth" {
@@ -104,15 +85,15 @@ resource "aws_eks_node_group" "main" {
   depends_on = [
     aws_iam_role_policy_attachment.eks_worker_node,
     aws_iam_role_policy_attachment.ec2_container_registry_read_only,
-    aws_iam_role_policy_attachment.eks_cni,
-    # aws_eks_identity_provider_config.main,
-    # aws_iam_role_policy_attachment.eks_vpc_cni,
+    aws_iam_role_policy_attachment.eks_cni
   ]
 
-  cluster_name    = aws_eks_cluster.main.name
+  cluster_name    = data.terraform_remote_state.cluster.outputs.name
   node_group_name = "eks-node-group-${random_id.id.hex}"
   node_role_arn   = aws_iam_role.eks_node_group.arn
-  subnet_ids      = module.environment.private_subnet_ids
+  subnet_ids      = data.terraform_remote_state.cluster.outputs.private_subnet_ids[*]
+
+  instance_types = [var.node_instance_type]
 
   scaling_config {
     desired_size = 3
@@ -128,9 +109,4 @@ resource "aws_eks_node_group" "main" {
     "environment" = var.environment_name
     "owner"       = var.owner_name
   }
-}
-
-resource "local_file" "kubeconfig" {
-  content  = local.kubeconfig
-  filename = "${path.root}/kubeconfig.yaml"
 }
