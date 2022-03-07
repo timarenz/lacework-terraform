@@ -2,7 +2,9 @@ provider "aws" {
   region = var.aws_region
 }
 
-provider "lacework" {}
+provider "lacework" {
+  profile = var.profile
+}
 
 data "lacework_agent_access_token" "nomad" {
   name = var.lacework_agent_token_name
@@ -172,7 +174,7 @@ resource "null_resource" "nomad_server" {
     inline = [
       "curl -sSL https://s3-us-west-2.amazonaws.com/www.lacework.net/download/4.3.0.5556_2021-10-04_release-v4.3_c4bb0ab95f6129749e61be26afb4b9d503c11522/install.sh > /tmp/lw-install.sh",
       "chmod +x /tmp/lw-install.sh",
-      "sudo /tmp/lw-install.sh -U https://api.fra.lacework.net ${data.lacework_agent_access_token.nomad.token}",
+      "sudo /tmp/lw-install.sh -U ${var.lw_apiurl} ${data.lacework_agent_access_token.nomad.token}",
       "rm -rf /tmp/lw-install.sh"
     ]
   }
@@ -233,7 +235,7 @@ resource "null_resource" "nomad_client" {
     inline = [
       "curl -sSL https://s3-us-west-2.amazonaws.com/www.lacework.net/download/4.3.0.5556_2021-10-04_release-v4.3_c4bb0ab95f6129749e61be26afb4b9d503c11522/install.sh > /tmp/lw-install.sh",
       "chmod +x /tmp/lw-install.sh",
-      "sudo /tmp/lw-install.sh -U https://api.fra.lacework.net ${data.lacework_agent_access_token.nomad.token}",
+      "sudo /tmp/lw-install.sh -U ${var.lw_apiurl} ${data.lacework_agent_access_token.nomad.token}",
       "rm -rf /tmp/lw-install.sh"
     ]
   }
