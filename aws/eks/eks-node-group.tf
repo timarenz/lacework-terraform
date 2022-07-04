@@ -1,14 +1,9 @@
-data "terraform_remote_state" "cluster" {
-  backend = "local"
-
-  config = {
-    path = "../eks-cluster/terraform.tfstate"
-  }
+data "aws_eks_cluster" "main" {
+  name = aws_eks_cluster.main.name
 }
 
-
-provider "aws" {
-  region = var.aws_region
+data "aws_eks_cluster_auth" "main" {
+  name = aws_eks_cluster.main.name
 }
 
 provider "kubernetes" {
@@ -17,20 +12,7 @@ provider "kubernetes" {
   token                  = data.aws_eks_cluster_auth.main.token
 }
 
-data "aws_eks_cluster" "main" {
-  name = data.terraform_remote_state.cluster.outputs.name
-}
-
-data "aws_eks_cluster_auth" "main" {
-  name = data.terraform_remote_state.cluster.outputs.name
-}
-
-resource "random_id" "id" {
-  byte_length = 3
-}
-
 resource "kubernetes_config_map" "aws_auth" {
-
   metadata {
     name      = "aws-auth"
     namespace = "kube-system"
@@ -88,10 +70,10 @@ resource "aws_eks_node_group" "main" {
     aws_iam_role_policy_attachment.eks_cni
   ]
 
-  cluster_name    = data.terraform_remote_state.cluster.outputs.name
+  cluster_name    = aws_eks_cluster.main.name
   node_group_name = "eks-node-group-${random_id.id.hex}"
   node_role_arn   = aws_iam_role.eks_node_group.arn
-  subnet_ids      = data.terraform_remote_state.cluster.outputs.private_subnet_ids[*]
+  subnet_ids      = module.environment.private_subnet_ids[*]
 
   instance_types = [var.node_instance_type]
 
